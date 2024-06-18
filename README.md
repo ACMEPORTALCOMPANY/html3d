@@ -22,7 +22,7 @@ representations
 
 ### HTML3d - ***outputs***
 ---
-***output.html :*** contains 3D object and faces
+***output.html :*** contains 3D object faces
 ```
     <svg class="face" id="f-0"></svg>
 ```
