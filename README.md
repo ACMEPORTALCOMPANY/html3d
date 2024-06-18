@@ -16,7 +16,7 @@ representations
 ```
 3. className: name of shared class for faces in generated HTML/CSS
 ```
-    - ex. html3d [ path ] -c [ className ]
+    html3d [ path ] -c [ className ]
 ```
 
 ### HTML3d - ***outputs***
