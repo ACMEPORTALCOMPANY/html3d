@@ -6,7 +6,9 @@ HTML3D is a command-line utility for converting 3D modeled geometries into HTML/
 representations
 
 ### USAGE
+
 ---
+
 ***path :*** required. path to triangularized model in .obj format
 ```
     html3d [ path ]
@@ -21,7 +23,9 @@ representations
 ```
 
 ### OUTPUTS
+
 ---
+
 ***output.html :*** contains 3D object faces
 ```
     <svg class="face" id="f-0"></svg>

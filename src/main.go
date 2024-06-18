@@ -44,13 +44,29 @@ func main() {
 		filePath := strings.Split(file.Name(), "/")
 		filename := strings.Split(filePath[len(filePath)-1], ".")[0]
 
-		class := "face"
+		className := "face"
+
 		if len(args) > 1 {
-			class = args[1]
+			flags := args[1:]
+
+			for i := 0; i < len(flags); i += 2 {
+				if len(flags) < i+2 {
+					log.Fatalf("ERROR: flag must be provided arg")
+				}
+
+				switch flags[i] {
+				case "-o":
+					filename = flags[i+1]
+				case "-c":
+					className = flags[i+1]
+				default:
+					log.Fatalf("ERROR: illegal arg [ %s ]", flags[i])
+				}
+			}
 		}
 
-		faces.Render(filename, class, faces2D)
+		faces.Render(filename, className, faces2D)
 	} else {
-		log.Fatal("ERROR: no args provided. run html3d [ path ] ...")
+		log.Fatal("ERROR: no args provided")
 	}
 }
