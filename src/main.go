@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ACMEPORTALCOMPANY/html3d/parse"
 	"github.com/ACMEPORTALCOMPANY/html3d/render"
 	"log"
 	"os"
@@ -15,13 +16,12 @@ var c = "face"
 
 func main() {
 	args := os.Args[1:]
-
 	if len(args) == 0 {
 		exitOnError("no args provided")
 	}
 
-	parts := strings.Split(args[0], "/")
-	o += strings.Split(parts[len(parts)-1], ".")[0]
+	path := strings.Split(args[0], "/")
+	o += strings.Split(path[len(path)-1], ".")[0]
 
 	if len(args) > 1 {
 		flags(args[1:])
@@ -35,6 +35,13 @@ func main() {
 	} else {
 		defer file.Close()
 	}
+
+	obj, err := parse.Parse(file)
+	if err != nil {
+		exitOnError(err.Error())
+	}
+
+	log.Printf("received obj w/ %d faces", len(obj.Faces))
 
 	err = render.HTML(o, s)
 	if err != nil {

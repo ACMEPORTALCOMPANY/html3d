@@ -58,11 +58,12 @@ func HTML(filename string, size int) error {
 	}
 
 	outerHTMLOpen := fmt.Sprintf("<svg viewBox=\"0 0 %d %d\">", size, size)
-	outerHTMLClose := "\n</svg>"
 
 	if _, err := html.Write([]byte(outerHTMLOpen)); err != nil {
 		return err
 	}
+
+	outerHTMLClose := "\n</svg>"
 
 	if _, err := html.Write([]byte(outerHTMLClose)); err != nil {
 		return err
