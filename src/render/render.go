@@ -2,14 +2,15 @@ package render
 
 import (
 	"fmt"
+	"github.com/ACMEPORTALCOMPANY/html3d/geometry"
 	"io/fs"
 	"os"
 )
 
 func out() error {
-	_, err := os.Stat("out")
+	_, err := os.Stat("../out")
 	if err != nil && os.IsNotExist(err) {
-		err = os.Mkdir("out", fs.ModeDir)
+		err = os.Mkdir("../out", fs.ModeDir)
 		if err != nil {
 			return err
 		}
@@ -20,7 +21,7 @@ func out() error {
 	return nil
 }
 
-func CSS(filename, className string) error {
+func CSS(className, filename string) error {
 	err := out()
 	if err != nil {
 		return err
@@ -46,13 +47,13 @@ func CSS(filename, className string) error {
 	return nil
 }
 
-func HTML(filename string, size int) error {
+func HTML(obj *geometry.O2, class, fill, output, stroke string, size int) error {
 	err := out()
 	if err != nil {
 		return err
 	}
 
-	html, err := os.Create(filename + ".html")
+	html, err := os.Create(output + ".html")
 	if err != nil {
 		return err
 	}
@@ -61,6 +62,14 @@ func HTML(filename string, size int) error {
 
 	if _, err := html.Write([]byte(outerHTMLOpen)); err != nil {
 		return err
+	}
+
+	for _, f := range obj.Faces {
+		format := "\n\t<polygon class=\"%s\" points=\"%.5f,%.5f, %.5f,%.5f, %.5f,%.5f\" fill=\"%s\" stroke=\"%s\" />"
+		line := fmt.Sprintf(format, class, f.A.X, f.A.Y, f.B.X, f.B.Y, f.C.X, f.C.Y, fill, stroke)
+		if _, err := html.Write([]byte(line)); err != nil {
+			return err
+		}
 	}
 
 	outerHTMLClose := "\n</svg>"
