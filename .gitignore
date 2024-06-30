@@ -1,2 +1,8 @@
-pack.*
 go.sum
+*.blend
+*.obj
+*.html
+*.css
+*.mtl
+out/*
+.idea

@@ -1,72 +1,105 @@
 package main
 
 import (
+	"fmt"
+	"github.com/ACMEPORTALCOMPANY/html3d/geometry"
+	"github.com/ACMEPORTALCOMPANY/html3d/parse"
+	"github.com/ACMEPORTALCOMPANY/html3d/render"
 	"log"
 	"os"
+	"strconv"
 	"strings"
-
-	"github.com/ACMEPORTALCOMPANY/html3d/faces"
-	"github.com/ACMEPORTALCOMPANY/html3d/object"
-	"github.com/ungerik/go3d/vec2"
-	"github.com/ungerik/go3d/vec3"
 )
+
+var class = "face"
+var fill = "none"
+var output = "../out/"
+var size = 200
+var stroke = "black"
 
 func main() {
 	args := os.Args[1:]
-
-	if len(args) > 0 {
-		path := args[0]
-
-		file, err := os.Open(path)
-		if err != nil {
-			log.Fatalf("ERROR: unable to open [ %s ]: %s", path, err.Error())
-		}
-		defer file.Close()
-		o := object.Obj(file)
-
-		var faces2D [][]vec2.T
-		for _, f := range o.Fs {
-			vA := o.Vs[f.VFs[0].V]
-			a := &vec3.T{vA.X, vA.Y, vA.Z}
-
-			vB := o.Vs[f.VFs[1].V]
-			b := &vec3.T{vB.X, vB.Y, vB.Z}
-
-			vC := o.Vs[f.VFs[2].V]
-			c := &vec3.T{vC.X, vC.Y, vC.Z}
-
-			face2D := faces.From3D(a, b, c)
-			faces2D = append(faces2D, face2D)
-		}
-
-		faces.NormalizeFaces(faces2D)
-
-		filePath := strings.Split(file.Name(), "/")
-		filename := strings.Split(filePath[len(filePath)-1], ".")[0]
-
-		className := "face"
-
-		if len(args) > 1 {
-			flags := args[1:]
-
-			for i := 0; i < len(flags); i += 2 {
-				if len(flags) < i+2 {
-					log.Fatalf("ERROR: flag must be provided arg")
-				}
-
-				switch flags[i] {
-				case "-o":
-					filename = flags[i+1]
-				case "-c":
-					className = flags[i+1]
-				default:
-					log.Fatalf("ERROR: illegal arg [ %s ]", flags[i])
-				}
-			}
-		}
-
-		faces.Render(filename, className, faces2D)
-	} else {
-		log.Fatal("ERROR: no args provided")
+	if len(args) == 0 {
+		exitOnError("no args provided")
 	}
+
+	path := strings.Split(args[0], "/")
+	output += strings.Split(path[len(path)-1], ".")[0]
+
+	if len(args) > 1 {
+		flags(args[1:])
+	}
+
+	log.Print("file: " + args[0])
+
+	o3 := parseObjFile(args[0]).Normalize(float64(size))
+	o2 := o3.Project2D().Normalize(float64(size))
+
+	err := render.HTML(o2, class, fill, output, stroke, size)
+	if err != nil {
+		exitOnError(err.Error())
+	}
+
+	err = render.CSS(class, output)
+	if err != nil {
+		exitOnError(err.Error())
+	}
+}
+
+func parseObjFile(path string) *geometry.O3 {
+	file, err := os.Open(path)
+	if err != nil {
+		exitOnError(err.Error())
+	} else {
+		defer func() {
+			if err := file.Close(); err != nil {
+				exitOnError(err.Error())
+			}
+		}()
+	}
+
+	obj, err := parse.Parse(file)
+	if err != nil {
+		exitOnError(err.Error())
+	}
+
+	return obj
+}
+
+func flags(args []string) {
+	if len(args)%2 != 0 {
+		exitOnError("flags must take arguments")
+	}
+
+	for i := 0; i < len(args); i += 2 {
+		switch args[i] {
+		case "-class":
+			class = args[i+1]
+		case "-fill":
+			fill = args[i+1]
+		case "-output":
+			output = "../out/" + args[i+1]
+		case "-size":
+			s, err := strconv.Atoi(args[i+1])
+			if err != nil {
+				exitOnError(fmt.Sprintf("unable to parse size %s", args[i+1]))
+			} else {
+				size = s
+			}
+		case "-stroke":
+			stroke = args[i+1]
+		default:
+			exitOnError("unknown flag " + args[i])
+		}
+	}
+
+	log.Print("fill: " + fill)
+	log.Print("class: " + class)
+	log.Print("output: " + output)
+	log.Printf("size: %d", size)
+	log.Print("stroke: " + stroke)
+}
+
+func exitOnError(msg string) {
+	log.Fatalf("ERROR - %s", msg)
 }
