@@ -178,8 +178,3 @@ func (o *O3) Project2D() *O3 {
 		Faces: faces,
 	}
 }
-
-type R3 struct {
-	Axis  *V3
-	Theta float64
-}
