@@ -31,15 +31,9 @@ func main() {
 	}
 
 	log.Print("file: " + args[0])
-	log.Print("fill: " + fill)
-	log.Print("class: " + class)
-	log.Print("output: " + output)
-	log.Printf("size: %d", size)
-	log.Print("stroke: " + stroke)
 
-	o3 := parseObjFile(args[0])
-	o2 := o3.Project2D()
-	o2.Normalize(float64(size))
+	o3 := parseObjFile(args[0]).Normalize(float64(size))
+	o2 := o3.Project2D().Normalize(float64(size))
 
 	err := render.HTML(o2, class, fill, output, stroke, size)
 	if err != nil {
@@ -98,6 +92,12 @@ func flags(args []string) {
 			exitOnError("unknown flag " + args[i])
 		}
 	}
+
+	log.Print("fill: " + fill)
+	log.Print("class: " + class)
+	log.Print("output: " + output)
+	log.Printf("size: %d", size)
+	log.Print("stroke: " + stroke)
 }
 
 func exitOnError(msg string) {

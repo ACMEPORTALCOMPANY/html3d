@@ -34,11 +34,15 @@ func CSS(className, filename string) error {
 
 	defaultClass := "." + className + " {"
 	defaultClass += "\n\tposition: absolute;"
-	defaultClass += "\n}"
+	defaultClass += "\n}\n\n"
 
 	if _, err := css.Write([]byte(defaultClass)); err != nil {
 		return err
 	}
+
+	style := "#f-%d {"
+	style += "\n\ttransform: rotate3D(%.2f, %.2f, %.2f, %.2frad);"
+	style += "\n}\n\n"
 
 	if err := css.Close(); err != nil {
 		return err
@@ -47,7 +51,7 @@ func CSS(className, filename string) error {
 	return nil
 }
 
-func HTML(obj *geometry.O2, class, fill, output, stroke string, size int) error {
+func HTML(obj *geometry.O3, class, fill, output, stroke string, size int) error {
 	err := out()
 	if err != nil {
 		return err
@@ -64,9 +68,9 @@ func HTML(obj *geometry.O2, class, fill, output, stroke string, size int) error 
 		return err
 	}
 
-	for _, f := range obj.Faces {
-		format := "\n\t<polygon class=\"%s\" points=\"%.5f,%.5f, %.5f,%.5f, %.5f,%.5f\" fill=\"%s\" stroke=\"%s\" />"
-		line := fmt.Sprintf(format, class, f.A.X, f.A.Y, f.B.X, f.B.Y, f.C.X, f.C.Y, fill, stroke)
+	for i, f := range obj.Faces {
+		format := "\n\t<polygon class=\"%s\" id=\"f-%d\" points=\"%.5f,%.5f, %.5f,%.5f, %.5f,%.5f\" fill=\"%s\" stroke=\"%s\" />"
+		line := fmt.Sprintf(format, class, i, f.A.X, f.A.Y, f.B.X, f.B.Y, f.C.X, f.C.Y, fill, stroke)
 		if _, err := html.Write([]byte(line)); err != nil {
 			return err
 		}

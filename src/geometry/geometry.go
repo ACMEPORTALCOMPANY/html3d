@@ -5,18 +5,6 @@ import (
 	"math"
 )
 
-type V2 struct {
-	X, Y float64
-}
-
-func (v *V2) String() string {
-	return fmt.Sprintf("V2 - X: %.4f, Y: %.4f", v.X, v.Y)
-}
-
-func (v *V2) Magnitude() float64 {
-	return math.Sqrt(math.Pow(v.X, 2) + math.Pow(v.Y, 2))
-}
-
 type V3 struct {
 	X, Y, Z float64
 }
@@ -29,12 +17,14 @@ func (v *V3) Magnitude() float64 {
 	return math.Sqrt(math.Pow(v.X, 2) + math.Pow(v.Y, 2) + math.Pow(v.Z, 2))
 }
 
-func (v *V3) Normalize() {
+func (v *V3) Normalize() *V3 {
 	mag := v.Magnitude()
 
 	v.X = v.X / mag
 	v.Y = v.Y / mag
 	v.Z = v.Z / mag
+
+	return v
 }
 
 func (v *V3) Cross(b *V3) *V3 {
@@ -49,14 +39,6 @@ func (v *V3) Dot(b *V3) float64 {
 	return (v.X * b.X) + (v.Y * b.Y) + (v.Z * b.Z)
 }
 
-type F2 struct {
-	A, B, C *V2
-}
-
-func (f *F2) String() string {
-	return fmt.Sprintf("F2 - A: [ %s ], B: [ %s ], C: [ %s ]", f.A.String(), f.B.String(), f.C.String())
-}
-
 type F3 struct {
 	A, B, C *V3
 }
@@ -65,7 +47,7 @@ func (f *F3) String() string {
 	return fmt.Sprintf("F3 - A: [ %s ],  B: [ %s ], C: [ %s ]", f.A.String(), f.B.String(), f.C.String())
 }
 
-func (f *F3) Project2D() *F2 {
+func (f *F3) Project2D() *F3 {
 	ab := &V3{
 		X: f.B.X - f.A.X,
 		Y: f.B.Y - f.A.Y,
@@ -90,30 +72,33 @@ func (f *F3) Project2D() *F2 {
 	v := n.Cross(u)
 	v.Normalize()
 
-	return &F2{
-		A: &V2{
+	return &F3{
+		A: &V3{
 			X: 0,
 			Y: 0,
+			Z: 0,
 		},
-		B: &V2{
+		B: &V3{
 			X: ab.Dot(u),
 			Y: ab.Dot(v),
+			Z: 0,
 		},
-		C: &V2{
+		C: &V3{
 			X: ac.Dot(u),
 			Y: ac.Dot(v),
+			Z: 0,
 		},
 	}
 }
 
-type O2 struct {
-	Faces []*F2
+type O3 struct {
+	Faces []*F3
 }
 
-func (o *O2) Normalize(scale float64) {
-	var xMin, xMax, yMin, yMax float64
+func (o *O3) Normalize(scale float64) *O3 {
+	var xMin, xMax, yMin, yMax, zMin, zMax float64
 
-	var vs []*V2
+	var vs []*V3
 	for _, f := range o.Faces {
 		vs = append(vs, f.A, f.B, f.C)
 	}
@@ -134,37 +119,67 @@ func (o *O2) Normalize(scale float64) {
 		if vs[i].Y > yMax {
 			yMax = vs[i].Y
 		}
+
+		if vs[i].Z > zMax {
+			zMax = vs[i].Z
+		}
+
+		if vs[i].Z < zMin {
+			zMin = vs[i].Z
+		}
 	}
 
-	diagonal := math.Sqrt(math.Pow(xMax-xMin, 2) + math.Pow(yMax-yMin, 2))
+	diagonal := math.Sqrt(math.Pow(xMax-xMin, 2) + math.Pow(yMax-yMin, 2) + math.Pow(zMax-zMin, 2))
 
-	normalizeX := func(x float64) float64 {
-		return ((x - xMin) / diagonal) * scale
+	normalize := func(x, xMin, xMargin float64) float64 {
+		normX := (x - xMin) / diagonal
+
+		return (normX * scale) + xMargin
 	}
 
-	normalizeY := func(y float64) float64 {
-		return ((y - yMin) / diagonal) * scale
+	normalizeY := func(y, yMin, yMargin float64) float64 {
+		normY := (y - yMin) / diagonal
+
+		return scale - (normY * scale) - yMargin
 	}
 
 	for _, f := range o.Faces {
-		f.A.X, f.A.Y = normalizeX(f.A.X), normalizeY(f.A.Y)
-		f.B.X, f.B.Y = normalizeX(f.B.X), normalizeY(f.B.Y)
-		f.C.X, f.C.Y = normalizeX(f.C.X), normalizeY(f.C.Y)
+		fXMin := math.Min(math.Min(f.A.X, f.B.X), f.C.X)
+		fXMax := math.Max(math.Max(f.A.X, f.B.X), f.C.X)
+		fYMin := math.Min(math.Min(f.A.Y, f.B.Y), f.C.Y)
+		fYMax := math.Max(math.Max(f.A.Y, f.B.Y), f.C.Y)
+		fZMin := math.Min(math.Min(f.A.Z, f.B.Z), f.C.Z)
+		fZMax := math.Max(math.Max(f.A.Z, f.B.Z), f.C.Z)
+
+		normXRange := (fXMax - fXMin) / diagonal
+		normYRange := (fYMax - fYMin) / diagonal
+		normZRange := (fZMax - fZMin) / diagonal
+
+		xMargin := (scale - scale*normXRange) / 2
+		yMargin := (scale - scale*normYRange) / 2
+		zMargin := (scale - scale*normZRange) / 2
+
+		f.A.X, f.A.Y, f.A.Z = normalize(f.A.X, fXMin, xMargin), normalizeY(f.A.Y, fYMin, yMargin), normalize(f.A.Z, fZMin, zMargin)
+		f.B.X, f.B.Y, f.B.Z = normalize(f.B.X, fXMin, xMargin), normalizeY(f.B.Y, fYMin, yMargin), normalize(f.B.Z, fZMin, zMargin)
+		f.C.X, f.C.Y, f.C.Z = normalize(f.C.X, fXMin, xMargin), normalizeY(f.C.Y, fYMin, yMargin), normalize(f.C.Z, fZMin, zMargin)
 	}
+
+	return o
 }
 
-type O3 struct {
-	Faces []*F3
-}
+func (o *O3) Project2D() *O3 {
 
-func (o *O3) Project2D() *O2 {
-
-	var faces []*F2
+	var faces []*F3
 	for _, f := range o.Faces {
 		faces = append(faces, f.Project2D())
 	}
 
-	return &O2{
+	return &O3{
 		Faces: faces,
 	}
+}
+
+type R3 struct {
+	Axis  *V3
+	Theta float64
 }
