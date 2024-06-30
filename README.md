@@ -13,13 +13,25 @@ representations
 ```
     html3d [ path ]
 ```
+***class :*** name of shared class for faces in generated HTML/CSS. defaults to 'face'
+```
+    html3d [ path ] -class [ class ]
+```
+***fill :*** SVG face fill color. defaults to 'none'
+```
+    html3d [ path ] -fill [ fill ]
+```
 ***output :*** filename for output files. defaults to name of .obj file
 ```
-    html3d [ path ] -o [ output ]
+    html3d [ path ] -output [ output ]
 ```
-***className :*** name of shared class for faces in generated HTML/CSS. defaults to 'face'
+***size :*** size of SVG canvas. defaults to 200
 ```
-    html3d [ path ] -c [ className ]
+    html3d [ path ] -size [ size ]
+```
+***stroke :*** SVG stroke color. defaults to 'black'
+```
+    html3d [ path ] -stroke [ stroke ]
 ```
 
 ### OUTPUTS
@@ -28,12 +40,17 @@ representations
 
 ***output.html :*** contains 3D object faces
 ```
-    <svg class="face" id="f-0"></svg>
+    <svg viewBox="0 0 500 500">
+	    <polygon class="face" id="f-0" points="37.76,382.12, 462.23,382.12, 293.30,117.87" fill="none" stroke="black" />
+    </svg>
 ```
-***output.css :*** contains face-defining geometry data
+***output.css :*** contains transformation data
 ```
-    #f-0{
-	    -webkit-clip-path: polygon(45.40% 53.71%,50.05% 53.71%,54.60% 46.29%);
-	    clip-path: polygon(45.40% 53.71%,50.05% 53.71%,54.60% 46.29%);
+    .face {
+        position: absolute;
+    }
+
+    #f-0 {
+        transform: rotate3D(-0.00, 1.00, 0.00, 2.50rad);
     }
 ```

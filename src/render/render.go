@@ -69,7 +69,7 @@ func HTML(obj *geometry.O3, class, fill, output, stroke string, size int) error 
 	}
 
 	for i, f := range obj.Faces {
-		format := "\n\t<polygon class=\"%s\" id=\"f-%d\" points=\"%.5f,%.5f, %.5f,%.5f, %.5f,%.5f\" fill=\"%s\" stroke=\"%s\" />"
+		format := "\n\t<polygon class=\"%s\" id=\"f-%d\" points=\"%.2f,%.2f, %.2f,%.2f, %.2f,%.2f\" fill=\"%s\" stroke=\"%s\" />"
 		line := fmt.Sprintf(format, class, i, f.A.X, f.A.Y, f.B.X, f.B.Y, f.C.X, f.C.Y, fill, stroke)
 		if _, err := html.Write([]byte(line)); err != nil {
 			return err
